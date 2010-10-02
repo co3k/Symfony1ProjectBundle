@@ -26,7 +26,7 @@ class ProjectManager
 
     require_once $configFile;
 
-    $configuration = \ProjectConfiguration::getApplicationConfiguration($this->application, 'dev', true);
+    $configuration = \ProjectConfiguration::getApplicationConfiguration($this->application, 'prod', false);
     \sfContext::createInstance($configuration);
   }
 
@@ -34,17 +34,19 @@ class ProjectManager
   {
     restore_error_handler();
 
+    // This is a trick not to output in symfony 1
+    $response = \sfContext::getInstance()->getResponse();
+    $response->setHeaderOnly(true);
+
     try
     {
-      ob_start();
       \sfContext::getInstance()->getController()->forward($module, $action);
-      $result = ob_get_flush();
     }
     catch (\sfStopException $e)
     {
       exit;
     }
 
-    return new Response('');
+    return new Response($response->getContent());
   }
 }
